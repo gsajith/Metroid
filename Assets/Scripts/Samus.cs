@@ -1,57 +1,88 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Samus : MonoBehaviour {
-	public float		speed = 8;
-	public float		jumpSpeed = 12;
-	public float		jumpAcc = 4;
+public class Samus : MonoBehaviour 
+{
+ public float speed = 8;
+ public float jumpSpeed = 12;
+ public float jumpAcc = 4;
 	
-	public bool			grounded = true;
-	public bool			canBall = false;
-	public bool				isBall = false;
-	bool				canShoot = true;
-	public bool				shootUp = false;
+ public bool grounded = true;
+ public bool canBall = false;
+ public bool isBall = false;
+ public bool canShoot = true;
+ public bool shootUp = false;
 
-	public RuntimeAnimatorController samusRun;
-	public RuntimeAnimatorController samusRoll;
-	public RuntimeAnimatorController samusIdle;
-	public RuntimeAnimatorController samusIdleUp;
-	public RuntimeAnimatorController samusJumpNormal;
-	public RuntimeAnimatorController samusJumpRoll;
-	public GameObject camera;
-	
-	void Update () { // Every Frame
-		float h = Input.GetAxis ("Horizontal");
-		float v = Input.GetAxis ("Vertical");
-		
-		Vector2 vel = rigidbody2D.velocity;
-		Quaternion rot = transform.rotation;
-		//vel.x = h*speed;
-		
-		if(!isBall) {
-			if(grounded && !Input.GetKey (KeyCode.UpArrow)
-			   && !Input.GetKey (KeyCode.LeftArrow)
-			   && !Input.GetKey (KeyCode.RightArrow)) {
-				//Idle and non-moving shooting animation
-				switchAnimation (samusIdle);
-			} else if(grounded && Input.GetKey (KeyCode.UpArrow)
-			          && !Input.GetKey (KeyCode.RightArrow)
-			          && !Input.GetKey (KeyCode.LeftArrow)) {
-				//Non-moving up animation
-				switchAnimation (samusIdleUp);
-			} else if(grounded && !Input.GetKey (KeyCode.UpArrow)
-			          && (Input.GetKey (KeyCode.LeftArrow) || 
-			    Input.GetKey (KeyCode.RightArrow))) {
-				//Running left and right animation
-				switchAnimation (samusRun);
-			}
-			if(!grounded) {				
-				Animator animator = gameObject.GetComponent<Animator> ();
-				if(animator.runtimeAnimatorController != samusJumpRoll) {
-					switchAnimation(samusJumpNormal);
-				}
-			}
-		}
+ public RuntimeAnimatorController samusRun;
+ public RuntimeAnimatorController samusRoll;
+ public RuntimeAnimatorController samusIdle;
+ public RuntimeAnimatorController samusIdleUp;
+ public RuntimeAnimatorController samusJumpNormal;
+ public RuntimeAnimatorController samusJumpRoll;
+ public RuntimeAnimatorController samusRunUp;
+
+ public bool twirling = false;
+
+ public GameObject camera;
+
+
+
+ void Update () 
+ {
+  Vector2 vel = rigidbody2D.velocity;
+  Quaternion rot = transform.rotation;
+
+
+
+  if(!isBall) // Not Ball - Standing
+  {
+   if(grounded && !Input.GetKey(KeyCode.UpArrow) // Grounded - idle
+			   && !Input.GetKey(KeyCode.LeftArrow)
+			   && !Input.GetKey(KeyCode.RightArrow)) 
+   {
+	//Idle and non-moving shooting animation
+	switchAnimation(samusIdle);
+   } 
+   else if(grounded && Input.GetKey(KeyCode.UpArrow) // Grounded - aiming up
+			        && !Input.GetKey(KeyCode.RightArrow)
+			        && !Input.GetKey(KeyCode.LeftArrow)) 
+   {
+	//Non-moving up animation
+    switchAnimation(samusIdleUp);
+   } 
+   else if(grounded && !Input.GetKey(KeyCode.UpArrow) // Grounded - moving left & right - aiming straight
+			        && (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow))) 
+   {
+	//Running left and right animation
+	switchAnimation(samusRun);
+   }
+   else if(grounded && Input.GetKey(KeyCode.UpArrow) // Grounded - moving left & right - aiming up
+			        && (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow))) 
+   {
+	switchAnimation(samusRunUp);
+   }
+
+   if(!grounded) // If in the air
+   {		
+				canShoot = true;
+	if(twirling == false) // Regular jump & falling
+	{
+	 switchAnimation(samusJumpNormal);
+	 twirling = false;
+	}
+    
+	if(twirling == true && Input.GetKey(KeyCode.Z)) // Shooting straight in air 
+	{
+	 switchAnimation(samusJumpNormal); 
+	 twirling = false;
+	}			
+   }
+  }
+
+
+
+
+
 		if(Input.GetKeyDown (KeyCode.RightArrow)) {
 			vel.x = speed;
 			rot.y = 0;
@@ -76,6 +107,8 @@ public class Samus : MonoBehaviour {
 			vel.x = -speed;
 			rot.y = -180;
 		}
+
+
 		if(Input.GetKeyDown (KeyCode.LeftArrow)) {
 			vel.x = -speed;
 			rot.y = -180;
@@ -88,24 +121,28 @@ public class Samus : MonoBehaviour {
 			if (grounded && !isBall) {
 				vel.y = jumpSpeed;
 				grounded = false;
-				if(Input.GetKey (KeyCode.LeftArrow) || Input.GetKey (KeyCode.RightArrow)) {
+				if(Input.GetKey (KeyCode.LeftArrow) || Input.GetKey (KeyCode.RightArrow)) 
+				{
 					switchAnimation (samusJumpRoll);
+					twirling = true;
+
+
+				
 				} else {
 					switchAnimation (samusJumpNormal);
+					twirling = false;
 				}
-			} 
-		}
-
-		if(isBall && !Input.GetKey (KeyCode.DownArrow) && (Input.GetKeyDown (KeyCode.X) || Input.GetKeyDown (KeyCode.UpArrow))) {
-			BoxCollider2D boxCollider = gameObject.GetComponent<BoxCollider2D>() as BoxCollider2D;
-			Vector2 size = boxCollider.size;
-			size.y = size.y / .49f;
-			boxCollider.size = size;
-			Vector2 center = boxCollider.center;
-			center.y = center.y / .49f;
-			boxCollider.center = center;
-			isBall = false;
-			canShoot = true;
+			} else if(isBall && !Input.GetKey (KeyCode.DownArrow)) {
+				BoxCollider2D boxCollider = gameObject.GetComponent<BoxCollider2D>() as BoxCollider2D;
+				Vector2 size = boxCollider.size;
+				size.y = size.y / .49f;
+				boxCollider.size = size;
+				Vector2 center = boxCollider.center;
+				center.y = center.y / .49f;
+				boxCollider.center = center;
+				isBall = false;
+				canShoot = true;
+			}
 		}
 
 		if (Input.GetKeyUp(KeyCode.X)) {

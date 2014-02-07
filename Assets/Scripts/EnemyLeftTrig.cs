@@ -1,29 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class EnemyLeftTrig : MonoBehaviour {
-
-	void Update () {
-		
-	}
+public class EnemyLeftTrig : MonoBehaviour 
+{
+ void OnTriggerEnter2D(Collider2D thing)
+ {
+  if(thing.tag == "Wall") 
+  {
+   transform.parent.gameObject.GetComponent<EnemyMove>().leftTouch = true;
+  } 
+ }
 	
-	void OnTriggerEnter2D(Collider2D thing)
-	{
-		if (thing.tag == "Wall") 
-		{
-			transform.parent.gameObject.GetComponent<EnemyMove>().leftTouch = true;
-			
-		} 
-	}
-	
-	void OnTriggerExit2D(Collider2D thing)
-	{
-		if (thing.tag == "Wall") 
-		{
-			transform.parent.gameObject.GetComponent<EnemyMove>().leftTouch = false;
-			
-		} 
-	}
-
-
+ void OnTriggerExit2D(Collider2D thing)
+ {
+  if(thing.tag == "Wall") 
+  {
+   transform.parent.gameObject.GetComponent<EnemyMove>().leftTouch = false;
+  } 
+ }
 }
